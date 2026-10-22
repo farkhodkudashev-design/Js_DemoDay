@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI WORLD — Твой мир. Твой интеллект. Твои возможности.</title>
+    <!-- Tailwind CSS for rapid responsive utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- JSZip for exporting complete backend folder -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bgMain: '#08090D',
+                        bgSec: '#10121B',
+                        bgCard: 'rgba(16, 18, 27, 0.7)',
+                        accentPurple: '#8B5CF6',
+                        accentCyan: '#22D3EE',
+                        textMain: '#F5F5F7',
+                        textSec: '#A1A1AA',
+                        borderGlass: 'rgba(255, 255, 255, 0.08)'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    boxShadow: {
+                        neonPurple: '0 0 25px -5px rgba(139, 92, 246, 0.35)',
+                        neonCyan: '0 0 25px -5px rgba(34, 211, 238, 0.35)',
+                        glass: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Custom Scrollbars & Animations */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #08090D; }
+        ::-webkit-scrollbar-thumb { background: #1f2333; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #8B5CF6; }
+
+        .glass-card {
+            background: rgba(16, 18, 27, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card-hover:hover {
+            transform: translateY(-4px);
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 12px 30px -10px rgba(139, 92, 246, 0.25);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #22D3EE 0%, #8B5CF6 50%, #EC4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glow-bg {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.15; transform: scale(1); }
+            50% { opacity: 0.25; transform: scale(1.1); }
+        }
+
+        .animate-pulse-glow { animation: pulseGlow 8s infinite ease-in-out; }
+
+        /* Typing Dot Wave */
+        .typing-dot {
+            animation: typingWave 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingWave {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Custom Code Block Syntax Highlighting Sim */
+        pre code { font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; }
+    </style>
+</head>
+<body class="bg-bgMain text-textMain font-sans min-h-screen flex flex-col antialiased selection:bg-accentPurple selection:text-white overflow-x-hidden">
+
+    <!-- Background Ambient Glows -->
+    <div class="glow-bg w-[500px] h-[500px] bg-accentPurple top-[-100px] left-[-100px] animate-pulse-glow"></div>
+    <div class="glow-bg w-[600px] h-[600px] bg-accentCyan bottom-[-150px] right-[-150px] animate-pulse-glow" style="animation-delay: 3s;"></div>
+
+    <!-- Notification Toast Handler Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- MAIN APP HEADER / NAVIGATION -->
+    <header class="sticky top-0 z-40 w-full glass-card border-b border-borderGlass bg-bgMain/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('landing')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-accentPurple to-accentCyan p-[2px] flex items-center justify-center shadow-neonPurple">
+                    <div class="w-full h-full bg-bgMain rounded-[10px] flex items-center justify-center">
+                        <i class="fa-solid fa-brain text-accentCyan text-lg"></i>
+                    </div>
+                </div>
+                <span class="text-xl font-extrabold tracking-wider gradient-text">AI WORLD</span>
+            </div>
+
+            <!-- Desktop Navigation Links -->
+            <nav class="hidden md:flex items-center gap-1 lg:gap-2">
+                <button onclick="switchTab('landing')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:text-accentCyan transition-all text-textSec" data-tab="landing">
+                    <i class="fa-solid fa-house mr-1.5 opacity-70"></i> Главная
+                </button>
+                <button onclick="switchTab('dashboard')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:text-accentCyan transition-all text-textSec" data-tab="dashboard">
+                    <i class="fa-solid fa-gauge-high mr-1.5 opacity-70"></i> Обзор
+                </button>
+                <button onclick="switchTab('chat')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:text-accentCyan transition-all text-textSec" data-tab="chat">
+                    <i class="fa-solid fa-comments mr-1.5 opacity-70"></i> AI Chat
+                </button>
+                <button onclick="switchTab('tools')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:text-accentCyan transition-all text-textSec" data-tab="tools">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1.5 opacity-70"></i> Инструменты
+                </button>
+                <button onclick="switchTab('projects')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:text-accentCyan transition-all text-textSec" data-tab="projects">
+                    <i class="fa-solid fa-folder-open mr-1.5 opacity-70"></i> Проекты
+                </button>
+                <button onclick="switchTab('history')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:text-accentCyan transition-all text-textSec" data-tab="history">
+                    <i class="fa-solid fa-clock-rotate-left mr-1.5 opacity-70"></i> История
+                </button>
+                <button onclick="switchTab('pricing')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:text-accentCyan transition-all text-textSec" data-tab="pricing">
+                    <i class="fa-solid fa-gem mr-1.5 opacity-70"></i> Тарифы
+                </button>
+            </nav>
+
+            <!-- User Auth / Profile Actions -->
+            <div class="flex items-center gap-3">
+                <!-- API Key Config Button -->
+                <button onclick="openApiKeyModal()" class="p-2 rounded-lg text-textSec hover:text-accentCyan hover:bg-white/5 transition-all" title="Настройки API Ключа Gemini">
+                    <i class="fa-solid fa-key text-sm"></i>
+                </button>
+
+                <!-- Guest State Controls -->
+                <div id="auth-buttons-guest" class="flex items-center gap-2">
+                    <button onclick="openAuthModal('login')" class="px-4 py-2 rounded-lg text-sm font-medium text-textMain hover:bg-white/5 transition-all">Войти</button>
+                    <button onclick="openAuthModal('register')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-accentPurple to-accentCyan hover:opacity-90 transition-all text-white shadow-neonPurple">Регистрация</button>
+                </div>
+
+                <!-- Logged In User State Profile -->
+                <div id="auth-buttons-user" class="hidden relative group">
+                    <button onclick="switchTab('profile')" class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-all border border-borderGlass">
+                        <img id="user-header-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=CyberUser" class="w-8 h-8 rounded-lg bg-bgSec" alt="Avatar">
+                        <span id="user-header-name" class="text-sm font-medium text-textMain hidden sm:block">Пользователь</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-textSec mr-1"></i>
+                    </button>
+                    <!-- Dropdown Menu -->
+                    <div class="absolute right-0 mt-2 w-48 rounded-xl glass-card border border-borderGlass shadow-xl py-2 hidden group-hover:block transition-all z-50">
+                        <button onclick="switchTab('profile')" class="w-full px-4 py-2 text-left text-sm text-textMain hover:bg-accentPurple/20 flex items-center gap-2">
+                            <i class="fa-solid fa-user text-accentCyan"></i> Профиль
+                        </button>
+                        <button onclick="switchTab('settings')" class="w-full px-4 py-2 text-left text-sm text-textMain hover:bg-accentPurple/20 flex items-center gap-2">
+                            <i class="fa-solid fa-gear text-accentPurple"></i> Настройки
+                        </button>
+                        <hr class="border-borderGlass my-1">
+                        <button onclick="logoutUser()" class="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2">
+                            <i class="fa-solid fa-right-from-bracket"></i> Выйти
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Hamburger Toggle -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-textSec hover:text-white">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Nav -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-borderGlass bg-bgSec px-4 py-3 flex flex-col gap-2">
+            <button onclick="switchTab('landing')" class="text-left px-3 py-2 rounded-lg text-textSec hover:text-accentCyan hover:bg-white/5"><i class="fa-solid fa-house w-6"></i> Главная</button>
+            <button onclick="switchTab('dashboard')" class="text-left px-3 py-2 rounded-lg text-textSec hover:text-accentCyan hover:bg-white/5"><i class="fa-solid fa-gauge-high w-6"></i> Обзор</button>
+            <button onclick="switchTab('chat')" class="text-left px-3 py-2 rounded-lg text-textSec hover:text-accentCyan hover:bg-white/5"><i class="fa-solid fa-comments w-6"></i> AI Chat</button>
+            <button onclick="switchTab('tools')" class="text-left px-3 py-2 rounded-lg text-textSec hover:text-accentCyan hover:bg-white/5"><i class="fa-solid fa-wand-magic-sparkles w-6"></i> Инструменты</button>
+            <button onclick="switchTab('projects')" class="text-left px-3 py-2 rounded-lg text-textSec hover:text-accentCyan hover:bg-white/5"><i class="fa-solid fa-folder-open w-6"></i> Проекты</button>
+            <button onclick="switchTab('history')" class="text-left px-3 py-2 rounded-lg text-textSec hover:text-accentCyan hover:bg-white/5"><i class="fa-solid fa-clock-rotate-left w-6"></i> История</button>
+            <button onclick="switchTab('pricing')" class="text-left px-3 py-2 rounded-lg text-textSec hover:text-accentCyan hover:bg-white/5"><i class="fa-solid fa-gem w-6"></i> Тарифы</button>
+        </div>
+    </header>
+
+    <!-- CONTENT VIEWS CONTAINER -->
+    <main id="main-content" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
+
+        <!-- ================= PAGE 1: LANDING HERO PAGE ================= -->
+        <section id="view-landing" class="tab-view space-y-20 py-8">
+            <!-- Hero Banner -->
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-accentPurple/30 text-xs font-semibold text-accentCyan">
+                        <span class="w-2 h-2 rounded-full bg-accentCyan animate-ping"></span>
+                        AI WORLD v3.0 Powered Platform
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+                        Твой мир. <br>
+                        <span class="gradient-text">Твой интеллект.</span> <br>
+                        Твои возможности.
+                    </h1>
+                    <p class="text-textSec text-base sm:text-lg leading-relaxed max-w-xl">
+                        Открой неограниченный потенциал искусственного интеллекта. Создавай уникальный контент, решай сложные задачи программирования, учись и сохраняй проекты в едином месте.
+                    </p>
+                    <div class="flex flex-wrap gap-4 pt-2">
+                        <button onclick="switchTab('chat')" class="px-6 py-3.5 rounded-xl font-semibold bg-gradient-to-r from-accentPurple to-accentCyan text-white hover:opacity-90 transition-all shadow-neonPurple flex items-center gap-2">
+                            <i class="fa-solid fa-rocket"></i> Начать бесплатно
+                        </button>
+                        <button onclick="switchTab('tools')" class="px-6 py-3.5 rounded-xl font-semibold glass-card hover:bg-white/10 transition-all border border-borderGlass flex items-center gap-2">
+                            <i class="fa-solid fa-compass"></i> Исследовать AI
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hero Interactive Demo Card -->
+                <div class="glass-card rounded-2xl p-6 relative border border-borderGlass shadow-neonPurple overflow-hidden">
+                    <div class="flex items-center justify-between pb-4 border-b border-borderGlass mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span class="text-xs text-textSec font-mono ml-2">ai-world-core.v3</span>
+                        </div>
+                        <span class="text-xs font-semibold text-accentCyan px-2 py-0.5 rounded bg-accentCyan/10">LIVE DEMO</span>
+                    </div>
+                    <div class="space-y-4 font-mono text-sm min-h-[220px]">
+                        <div class="p-3 rounded-xl bg-bgSec/80 border border-white/5">
+                            <span class="text-accentPurple font-semibold">Пользователь:</span>
+                            <p class="text-textMain mt-1 text-xs sm:text-sm">Напиши быструю функцию Python для генерации случайного токена безопасности.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-accentPurple/10 border border-accentPurple/20">
+                            <span class="text-accentCyan font-semibold flex items-center gap-1.5">
+                                <i class="fa-solid fa-robot"></i> AI WORLD:
+                            </span>
+                            <pre class="text-xs text-textMain mt-2 overflow-x-auto bg-black/40 p-2 rounded border border-white/5"><code class="language-python">import secrets
+
+def generate_secure_token(length=32):
+    return secrets.token_hex(length)
+
+print(generate_secure_token())</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="space-y-8">
+                <div class="text-center max-w-2xl mx-auto">
+                    <h2 class="text-3xl font-bold">Мощные возможности в одном месте</h2>
+                    <p class="text-textSec mt-2">Каждый инструмент спроектирован для максимальной продуктивности.</p>
+                </div>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-card glass-card-hover p-6 rounded-2xl space-y-3 cursor-pointer" onclick="switchTab('chat')">
+                        <div class="w-12 h-12 rounded-xl bg-accentPurple/20 text-accentPurple flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-comments"></i>
+                        </div>
+                        <h3 class="font-bold text-lg">Умный AI Chat</h3>
+                        <p class="text-textSec text-sm">Интерактивные диалоги, понимание контекста, сохранение истории и подсветка кода.</p>
+                    </div>
+                    <div class="glass-card glass-card-hover p-6 rounded-2xl space-y-3 cursor-pointer" onclick="switchTab('tools')">
+                        <div class="w-12 h-12 rounded-xl bg-accentCyan/20 text-accentCyan flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-file-pen"></i>
+                        </div>
+                        <h3 class="font-bold text-lg">Генератор Текстов</h3>
+                        <p class="text-textSec text-sm">Статьи, посты, сценарии и креативные тексты с гибкой настройкой стиля.</p>
+                    </div>
+                    <div class="glass-card glass-card-hover p-6 rounded-2xl space-y-3 cursor-pointer" onclick="switchTab('tools')">
+                        <div class="w-12 h-12 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-code"></i>
+                        </div>
+                        <h3 class="font-bold text-lg">Code Assistant</h3>
+                        <p class="text-textSec text-sm">Генерация, поиск багов, рефакторинг и подробное объяснение кода любой сложности.</p>
+                    </div>
+                    <div class="glass-card glass-card-hover p-6 rounded-2xl space-y-3 cursor-pointer" onclick="switchTab('tools')">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <h3 class="font-bold text-lg">AI Репетитор</h3>
+                        <p class="text-textSec text-sm">Персональные планы обучения, пошаговые решения и генерация интерактивных тестов.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="max-w-3xl mx-auto space-y-6">
+                <h2 class="text-3xl font-bold text-center">Часто задаваемые вопросы</h2>
+                <div class="space-y-3">
+                    <details class="glass-card rounded-xl p-4 border border-borderGlass cursor-pointer">
+                        <summary class="font-semibold text-textMain flex justify-between items-center">
+                            Нужен ли собственный API-ключ для работы?
+                            <i class="fa-solid fa-chevron-down text-textSec"></i>
+                        </summary>
+                        <p class="text-textSec text-sm mt-3 leading-relaxed">
+                            Платформа AI WORLD поддерживает работу как с базовыми встроенными моделями, так и с твоим личным API-ключом Google Gemini. Указать ключ можно в настройках (иконка ключа в шапке).
+                        </p>
+                    </details>
+                    <details class="glass-card rounded-xl p-4 border border-borderGlass cursor-pointer">
+                        <summary class="font-semibold text-textMain flex justify-between items-center">
+                            Сохраняются ли мои проекты и история диалогов?
+                            <i class="fa-solid fa-chevron-down text-textSec"></i>
+                        </summary>
+                        <p class="text-textSec text-sm mt-3 leading-relaxed">
+                            Да! Вся история запросов и сохраненные проекты автоматически привязываются к твоему профилю и доступны в разделах «Проекты» и «История».
+                        </p>
+                    </details>
+                    <details class="glass-card rounded-xl p-4 border border-borderGlass cursor-pointer">
+                        <summary class="font-semibold text-textMain flex justify-between items-center">
+                            Как получить исходный код полноценного сервера Node.js + Express?
+                            <i class="fa-solid fa-chevron-down text-textSec"></i>
+                        </summary>
+                        <p class="text-textSec text-sm mt-3 leading-relaxed">
+                            Перейди в раздел «Настройки» или нажми на специальный баннер экспортёра, чтобы просмотреть и скачать весь готовый проект с сервером Express, базой SQLite и API роутами в один клик ZIP-архивом!
+                        </p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 2: DASHBOARD VIEW ================= -->
+        <section id="view-dashboard" class="tab-view hidden space-y-8">
+            <!-- Top Greeting Header -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 glass-card p-6 rounded-2xl border border-borderGlass">
+                <div>
+                    <h2 class="text-2xl font-bold">С возвращением, <span id="dash-user-name" class="gradient-text">Гость</span>! 👋</h2>
+                    <p class="text-textSec text-sm mt-1">Что планируешь создать сегодня?</p>
+                </div>
+                <button onclick="switchTab('chat')" class="px-5 py-2.5 rounded-xl font-medium bg-gradient-to-r from-accentPurple to-accentCyan text-white shadow-neonPurple text-sm">
+                    <i class="fa-solid fa-plus mr-1.5"></i> Новый AI Чат
+                </button>
+            </div>
+
+            <!-- Real-time dynamic stats cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card p-5 rounded-2xl border border-borderGlass">
+                    <div class="flex justify-between items-center text-textSec text-xs font-semibold uppercase tracking-wider">
+                        Проекты
+                        <i class="fa-solid fa-folder text-accentPurple text-base"></i>
+                    </div>
+                    <div id="stat-projects-count" class="text-3xl font-bold mt-2">0</div>
+                    <span class="text-xs text-emerald-400 font-medium flex items-center gap-1 mt-1"><i class="fa-solid fa-arrow-up"></i> Сохранено</span>
+                </div>
+                <div class="glass-card p-5 rounded-2xl border border-borderGlass">
+                    <div class="flex justify-between items-center text-textSec text-xs font-semibold uppercase tracking-wider">
+                        Сообщений в Чат
+                        <i class="fa-solid fa-message text-accentCyan text-base"></i>
+                    </div>
+                    <div id="stat-messages-count" class="text-3xl font-bold mt-2">0</div>
+                    <span class="text-xs text-accentCyan font-medium flex items-center gap-1 mt-1"><i class="fa-solid fa-bolt"></i> Диалоги</span>
+                </div>
+                <div class="glass-card p-5 rounded-2xl border border-borderGlass">
+                    <div class="flex justify-between items-center text-textSec text-xs font-semibold uppercase tracking-wider">
+                        Генераций
+                        <i class="fa-solid fa-wand-magic text-pink-400 text-base"></i>
+                    </div>
+                    <div id="stat-generations-count" class="text-3xl font-bold mt-2">0</div>
+                    <span class="text-xs text-pink-400 font-medium flex items-center gap-1 mt-1"><i class="fa-solid fa-check"></i> Успешно</span>
+                </div>
+                <div class="glass-card p-5 rounded-2xl border border-borderGlass">
+                    <div class="flex justify-between items-center text-textSec text-xs font-semibold uppercase tracking-wider">
+                        Текущий Тариф
+                        <i class="fa-solid fa-shield-halved text-amber-400 text-base"></i>
+                    </div>
+                    <div id="stat-plan-name" class="text-2xl font-bold mt-2 text-amber-300">Free Tier</div>
+                    <span class="text-xs text-textSec font-medium flex items-center gap-1 mt-1" onclick="switchTab('pricing')"><a class="underline cursor-pointer hover:text-white">Улучшить</a></span>
+                </div>
+            </div>
+
+            <!-- Quick Tool Access & Recent Activity -->
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Quick Tools Launcher -->
+                <div class="lg:col-span-2 glass-card p-6 rounded-2xl space-y-4">
+                    <h3 class="font-bold text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-accentCyan"></i> Быстрый запуск инструментов
+                    </h3>
+                    <div class="grid sm:grid-cols-3 gap-3">
+                        <button onclick="openToolDirect('text')" class="p-4 rounded-xl bg-bgSec/70 border border-borderGlass hover:border-accentPurple/50 hover:bg-white/5 transition-all text-left group">
+                            <i class="fa-solid fa-file-lines text-accentPurple text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                            <h4 class="font-semibold text-sm">Генератор Статей</h4>
+                            <p class="text-xs text-textSec mt-1">Тексты любой тематики</p>
+                        </button>
+                        <button onclick="openToolDirect('code')" class="p-4 rounded-xl bg-bgSec/70 border border-borderGlass hover:border-accentCyan/50 hover:bg-white/5 transition-all text-left group">
+                            <i class="fa-solid fa-laptop-code text-accentCyan text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                            <h4 class="font-semibold text-sm">Помощник Кода</h4>
+                            <p class="text-xs text-textSec mt-1">Отладка и рефакторинг</p>
+                        </button>
+                        <button onclick="openToolDirect('study')" class="p-4 rounded-xl bg-bgSec/70 border border-borderGlass hover:border-emerald-400/50 hover:bg-white/5 transition-all text-left group">
+                            <i class="fa-solid fa-brain text-emerald-400 text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                            <h4 class="font-semibold text-sm">План Обучения</h4>
+                            <p class="text-xs text-textSec mt-1">Изучение новых тем</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Saved Projects Snapshot -->
+                <div class="glass-card p-6 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-lg">Недавние Проекты</h3>
+                        <button onclick="switchTab('projects')" class="text-xs text-accentCyan hover:underline">Все</button>
+                    </div>
+                    <div id="dash-recent-projects" class="space-y-3">
+                        <!-- Dynamic List items inserted here -->
+                        <div class="text-xs text-textSec text-center py-6">У вас пока нет сохраненных проектов</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 3: AI CHAT STUDIO ================= -->
+        <section id="view-chat" class="tab-view hidden h-[calc(100vh-120px)] flex flex-col md:flex-row gap-4">
+            
+            <!-- Chat History Sidebar -->
+            <div class="w-full md:w-64 glass-card rounded-2xl p-4 flex flex-col gap-3 shrink-0 max-h-[220px] md:max-h-full overflow-hidden">
+                <button onclick="startNewChatSession()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-accentPurple to-accentCyan text-white font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 shadow-neonPurple transition-all">
+                    <i class="fa-solid fa-plus"></i> Новый Диалог
+                </button>
+                <div class="relative">
+                    <input type="text" id="chat-search-input" onkeyup="filterChatHistory()" placeholder="Поиск диалогов..." class="w-full bg-bgMain/70 border border-borderGlass rounded-lg px-3 py-1.5 text-xs text-textMain focus:outline-none focus:border-accentCyan">
+                    <i class="fa-solid fa-search absolute right-2.5 top-2.5 text-xs text-textSec"></i>
+                </div>
+                <div id="chat-session-list" class="flex-1 overflow-y-auto space-y-1 pr-1">
+                    <!-- Dynamic Sessions List -->
+                </div>
+            </div>
+
+            <!-- Chat Main Area -->
+            <div class="flex-1 glass-card rounded-2xl flex flex-col overflow-hidden border border-borderGlass relative">
+                
+                <!-- Chat Window Header -->
+                <div class="p-4 border-b border-borderGlass flex items-center justify-between bg-bgSec/50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-accentPurple/20 flex items-center justify-center text-accentPurple">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div>
+                            <h3 id="current-chat-title" class="font-semibold text-sm">AI World Assistant</h3>
+                            <p class="text-xs text-textSec flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Онлайн • Gemini 3 Flash Model
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="clearCurrentChatMessages()" class="p-2 text-textSec hover:text-red-400 rounded-lg hover:bg-white/5 transition-all" title="Очистить чат">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Scrollable Messages List -->
+                <div id="chat-messages-box" class="flex-1 p-4 overflow-y-auto space-y-4">
+                    <!-- Default AI Welcome Message -->
+                    <div class="flex gap-3 max-w-3xl">
+                        <div class="w-8 h-8 rounded-lg bg-accentPurple/20 text-accentPurple flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <div class="glass-card p-4 rounded-2xl border border-borderGlass text-sm text-textMain leading-relaxed space-y-2">
+                            <p>Привет! Я интеллект **AI WORLD**. Чем могу помочь сегодня?</p>
+                            <p class="text-xs text-textSec">Можешь попросить меня написать код, сгенерировать статью, составить план или объяснить сложную тему!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input Controls Container -->
+                <div class="p-3 border-t border-borderGlass bg-bgSec/80">
+                    <!-- Prompt Presets Chips -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-2 no-scrollbar text-xs">
+                        <span class="text-textSec font-medium shrink-0">Идеи:</span>
+                        <button onclick="useChatPreset('Напиши план изучения Python с нуля')" class="px-2.5 py-1 rounded-full glass-card border border-borderGlass hover:border-accentCyan/50 text-textSec hover:text-white shrink-0">💡 План Python</button>
+                        <button onclick="useChatPreset('Объясни квантовые компьютеры простыми словами')" class="px-2.5 py-1 rounded-full glass-card border border-borderGlass hover:border-accentCyan/50 text-textSec hover:text-white shrink-0">⚛️ Квантовые ПК</button>
+                        <button onclick="useChatPreset('Напиши рекламный пост для нового продукта')" class="px-2.5 py-1 rounded-full glass-card border border-borderGlass hover:border-accentCyan/50 text-textSec hover:text-white shrink-0">📝 Рекламный пост</button>
+                    </div>
+
+                    <div class="relative flex items-center">
+                        <textarea id="chat-input" rows="1" onkeydown="handleChatKeyDown(event)" placeholder="Спроси AI о чем угодно... (Shift+Enter для переноса)" class="w-full bg-bgMain border border-borderGlass rounded-xl pl-4 pr-12 py-3 text-sm text-textMain focus:outline-none focus:border-accentPurple resize-none max-h-32"></textarea>
+                        <button onclick="sendChatMessage()" id="chat-send-btn" class="absolute right-2 p-2 rounded-lg bg-gradient-to-tr from-accentPurple to-accentCyan text-white hover:opacity-90 transition-all shadow-neonPurple">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 4: AI TOOLS HUB ================= -->
+        <section id="view-tools" class="tab-view hidden space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Каталог AI-Инструментов</h2>
+                    <p class="text-textSec text-sm">Специализированные ассистенты под каждую задачу.</p>
+                </div>
+                <!-- Category Filters -->
+                <div class="flex flex-wrap gap-2 text-xs font-medium">
+                    <button onclick="filterTools('all')" class="tool-filter-btn px-3 py-1.5 rounded-lg glass-card border border-accentPurple text-white" data-cat="all">Все</button>
+                    <button onclick="filterTools('text')" class="tool-filter-btn px-3 py-1.5 rounded-lg glass-card border border-borderGlass text-textSec hover:text-white" data-cat="text">Текст</button>
+                    <button onclick="filterTools('code')" class="tool-filter-btn px-3 py-1.5 rounded-lg glass-card border border-borderGlass text-textSec hover:text-white" data-cat="code">Кодинг</button>
+                    <button onclick="filterTools('study')" class="tool-filter-btn px-3 py-1.5 rounded-lg glass-card border border-borderGlass text-textSec hover:text-white" data-cat="study">Обучение</button>
+                </div>
+            </div>
+
+            <!-- Sub Tool Active Views Container -->
+            <div id="tool-active-workspace" class="glass-card rounded-2xl p-6 border border-borderGlass">
+                <!-- Sub Tabs for Tools -->
+                <div class="flex border-b border-borderGlass pb-4 mb-6 gap-6 text-sm font-semibold">
+                    <button onclick="switchSubTool('text-gen')" id="subtool-tab-text-gen" class="subtool-tab text-accentCyan border-b-2 border-accentCyan pb-2">
+                        <i class="fa-solid fa-file-pen mr-1"></i> Генератор Текста
+                    </button>
+                    <button onclick="switchSubTool('code-assist')" id="subtool-tab-code-assist" class="subtool-tab text-textSec hover:text-white pb-2">
+                        <i class="fa-solid fa-code mr-1"></i> Code Assistant
+                    </button>
+                    <button onclick="switchSubTool('study-assist')" id="subtool-tab-study-assist" class="subtool-tab text-textSec hover:text-white pb-2">
+                        <i class="fa-solid fa-graduation-cap mr-1"></i> Study Assistant
+                    </button>
+                </div>
+
+                <!-- 1. Text Generator Tool Pane -->
+                <div id="subtool-view-text-gen" class="subtool-pane grid lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-textSec mb-1">Тип текста / Формат</label>
+                            <select id="tg-type" class="w-full bg-bgMain border border-borderGlass rounded-xl p-2.5 text-sm text-textMain focus:outline-none focus:border-accentCyan">
+                                <option value="Статья для блога">Статья для блога</option>
+                                <option value="Рекламный пост для соцсетей">Рекламный пост</option>
+                                <option value="Деловое Email письмо">Деловое Email письмо</option>
+                                <option value="Сценарий для видео">Сценарий для видео</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-textSec mb-1">Тема / Краткая суть</label>
+                            <textarea id="tg-topic" rows="3" placeholder="Например: Преимущества перехода бизнеса на искусственный интеллект..." class="w-full bg-bgMain border border-borderGlass rounded-xl p-3 text-sm text-textMain focus:outline-none focus:border-accentCyan resize-none"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-textSec mb-1">Тон / Стиль</label>
+                                <select id="tg-style" class="w-full bg-bgMain border border-borderGlass rounded-xl p-2.5 text-sm text-textMain">
+                                    <option value="Профессиональный">Профессиональный</option>
+                                    <option value="Дружелюбный">Дружелюбный</option>
+                                    <option value="Убедительный">Убедительный</option>
+                                    <option value="Креативный">Креативный</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-textSec mb-1">Язык</label>
+                                <select id="tg-lang" class="w-full bg-bgMain border border-borderGlass rounded-xl p-2.5 text-sm text-textMain">
+                                    <option value="Русский">Русский</option>
+                                    <option value="English">English</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="generateTextTool()" id="tg-submit-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-accentPurple to-accentCyan text-white font-semibold text-sm shadow-neonPurple hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Сгенерировать Текст
+                        </button>
+                    </div>
+
+                    <!-- Output Box -->
+                    <div class="glass-card p-4 rounded-xl border border-borderGlass flex flex-col justify-between min-h-[300px]">
+                        <div>
+                            <div class="flex justify-between items-center border-b border-borderGlass pb-2 mb-3">
+                                <span class="text-xs font-semibold text-textSec">Результат Генерации</span>
+                                <div class="flex gap-2">
+                                    <button onclick="copyToolResult('tg-output')" class="text-xs text-accentCyan hover:underline"><i class="fa-solid fa-copy"></i> Копировать</button>
+                                    <button onclick="saveToolResultToProject('Text Project', 'tg-output')" class="text-xs text-accentPurple hover:underline"><i class="fa-solid fa-bookmark"></i> Сохранить в Проект</button>
+                                </div>
+                            </div>
+                            <div id="tg-output" class="text-sm text-textMain whitespace-pre-wrap leading-relaxed font-sans min-h-[200px]">
+                                <span class="text-textSec italic text-xs">Заполните форму слева и нажмите «Сгенерировать Текст»...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Code Assistant Tool Pane -->
+                <div id="subtool-view-code-assist" class="subtool-pane hidden grid lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-textSec mb-1">Задача / Описание Кода</label>
+                            <textarea id="ca-task" rows="3" placeholder="Например: Напиши скрипт на JavaScript для валидации формы и проверки email..." class="w-full bg-bgMain border border-borderGlass rounded-xl p-3 text-sm text-textMain focus:outline-none focus:border-accentCyan resize-none"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-textSec mb-1">Язык Программирования</label>
+                                <select id="ca-lang" class="w-full bg-bgMain border border-borderGlass rounded-xl p-2.5 text-sm text-textMain">
+                                    <option value="JavaScript">JavaScript</option>
+                                    <option value="Python">Python</option>
+                                    <option value="HTML/CSS">HTML/CSS</option>
+                                    <option value="C++">C++</option>
+                                    <option value="SQL">SQL</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-textSec mb-1">Режим</label>
+                                <select id="ca-mode" class="w-full bg-bgMain border border-borderGlass rounded-xl p-2.5 text-sm text-textMain">
+                                    <option value="Генерация кода">Генерация кода</option>
+                                    <option value="Поиск ошибок и багов">Поиск багов</option>
+                                    <option value="Объяснение кода">Объяснение кода</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="generateCodeTool()" id="ca-submit-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-accentPurple to-accentCyan text-white font-semibold text-sm shadow-neonPurple hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-code"></i> Запустить Code AI
+                        </button>
+                    </div>
+
+                    <!-- Output Box Code -->
+                    <div class="glass-card p-4 rounded-xl border border-borderGlass flex flex-col justify-between min-h-[300px]">
+                        <div>
+                            <div class="flex justify-between items-center border-b border-borderGlass pb-2 mb-3">
+                                <span class="text-xs font-semibold text-textSec">Сгенерированный Код / Анализ</span>
+                                <div class="flex gap-2">
+                                    <button onclick="copyToolResult('ca-output')" class="text-xs text-accentCyan hover:underline"><i class="fa-solid fa-copy"></i> Копировать</button>
+                                    <button onclick="saveToolResultToProject('Code Project', 'ca-output')" class="text-xs text-accentPurple hover:underline"><i class="fa-solid fa-bookmark"></i> Сохранить</button>
+                                </div>
+                            </div>
+                            <pre id="ca-output" class="text-xs font-mono text-emerald-400 bg-black/60 p-3 rounded-lg overflow-x-auto min-h-[220px]"><code>// Ваш сгенерированный код появится здесь...</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Study Assistant Tool Pane -->
+                <div id="subtool-view-study-assist" class="subtool-pane hidden grid lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-textSec mb-1">Тема для Изучения</label>
+                            <input type="text" id="sa-topic" placeholder="Например: Основы теории относительности или Базы данных SQL" class="w-full bg-bgMain border border-borderGlass rounded-xl p-3 text-sm text-textMain focus:outline-none focus:border-accentCyan">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-textSec mb-1">Тип Учебного Материала</label>
+                            <select id="sa-format" class="w-full bg-bgMain border border-borderGlass rounded-xl p-2.5 text-sm text-textMain">
+                                <option value="Пошаговый план изучения">Пошаговый план изучения</option>
+                                <option value="Карточки для запоминания (Flashcards)">Карточки для запоминания</option>
+                                <option value="Интерактивный мини-тест з вопросами">Интерактивный мини-тест</option>
+                                <option value="Простое объяснение для новичка">Объяснение «на пальцах»</option>
+                            </select>
+                        </div>
+                        <button onclick="generateStudyTool()" id="sa-submit-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-accentPurple to-accentCyan text-white font-semibold text-sm shadow-neonPurple hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-graduation-cap"></i> Создать Обучающий Материал
+                        </button>
+                    </div>
+
+                    <!-- Output Box Study -->
+                    <div class="glass-card p-4 rounded-xl border border-borderGlass flex flex-col justify-between min-h-[300px]">
+                        <div>
+                            <div class="flex justify-between items-center border-b border-borderGlass pb-2 mb-3">
+                                <span class="text-xs font-semibold text-textSec">Материал Урока</span>
+                                <button onclick="saveToolResultToProject('Study Material', 'sa-output')" class="text-xs text-accentPurple hover:underline"><i class="fa-solid fa-bookmark"></i> Сохранить в Проекты</button>
+                            </div>
+                            <div id="sa-output" class="text-sm text-textMain whitespace-pre-wrap leading-relaxed min-h-[200px]">
+                                <span class="text-textSec italic text-xs">Введите тему изучения и нажмите «Создать»...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 5: MY PROJECTS ================= -->
+        <section id="view-projects" class="tab-view hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Мои Проекты</h2>
+                    <p class="text-textSec text-sm">Управление сохраненными генерациями и заметками.</p>
+                </div>
+                <button onclick="openCreateProjectModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-accentPurple to-accentCyan text-white font-medium text-sm shadow-neonPurple flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Создать Проект
+                </button>
+            </div>
+
+            <!-- Search & Filter Bar -->
+            <div class="flex gap-3">
+                <div class="relative flex-1">
+                    <input type="text" id="projects-search" onkeyup="renderProjectsList()" placeholder="Поиск по названию или содержимому..." class="w-full bg-bgSec border border-borderGlass rounded-xl px-4 py-2 text-sm text-textMain focus:outline-none focus:border-accentCyan">
+                    <i class="fa-solid fa-search absolute right-3 top-3 text-textSec text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Projects Grid Container -->
+            <div id="projects-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic Projects Cards Inserted via JS -->
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 6: HISTORY LOGS ================= -->
+        <section id="view-history" class="tab-view hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold">История Активности</h2>
+                    <p class="text-textSec text-sm">Логи всех ваших запросов к искусственному интеллекту.</p>
+                </div>
+                <button onclick="clearAllHistoryLogs()" class="text-xs text-red-400 hover:underline flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can"></i> Очистить историю
+                </button>
+            </div>
+
+            <div class="glass-card rounded-2xl border border-borderGlass overflow-hidden">
+                <div id="history-logs-container" class="divide-y divide-borderGlass">
+                    <!-- Dynamic Log Items -->
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 7: PROFILE & SETTINGS ================= -->
+        <section id="view-profile" class="tab-view hidden space-y-8">
+            <div class="max-w-3xl mx-auto space-y-6">
+                <!-- User Profile Card -->
+                <div class="glass-card p-6 rounded-2xl border border-borderGlass flex flex-col sm:flex-row items-center gap-6">
+                    <img id="profile-avatar-img" src="https://api.dicebear.com/7.x/bottts/svg?seed=CyberUser" class="w-20 h-20 rounded-2xl bg-bgSec border border-borderGlass" alt="User Avatar">
+                    <div class="space-y-1 text-center sm:text-left flex-1">
+                        <h3 id="profile-display-name" class="text-xl font-bold">Пользователь</h3>
+                        <p id="profile-display-email" class="text-textSec text-sm">user@aiworld.com</p>
+                        <div class="inline-block mt-2 px-3 py-1 rounded-full bg-accentPurple/20 text-accentCyan text-xs font-semibold">
+                            Тариф: <span id="profile-display-plan">Free User</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Settings Form -->
+                <div id="view-settings" class="glass-card p-6 rounded-2xl border border-borderGlass space-y-6">
+                    <h3 class="font-bold text-lg border-b border-borderGlass pb-3">Настройки Аккаунта</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-textSec mb-1">Имя пользователя</label>
+                            <input type="text" id="settings-name-input" class="w-full bg-bgMain border border-borderGlass rounded-xl px-4 py-2.5 text-sm text-textMain focus:outline-none focus:border-accentCyan">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-textSec mb-1">Изменить Пароль</label>
+                            <input type="password" id="settings-pass-input" placeholder="Новый пароль..." class="w-full bg-bgMain border border-borderGlass rounded-xl px-4 py-2.5 text-sm text-textMain focus:outline-none focus:border-accentCyan">
+                        </div>
+                        <button onclick="saveUserSettings()" class="px-5 py-2.5 rounded-xl bg-accentPurple hover:bg-accentPurple/80 text-white font-medium text-sm transition-all">
+                            Сохранить Изменения
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DOWNLOAD FULL BACKEND FOLDER SOURCE CODE EXPORTER -->
+                <div class="glass-card p-6 rounded-2xl border border-accentCyan/30 space-y-4 bg-accentCyan/5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-accentCyan/20 text-accentCyan flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-file-zipper"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">Полная сборка Full-Stack Node.js + Express + SQLite</h3>
+                            <p class="text-xs text-textSec">Скачай готовую файловую структуру проекта для локального запуска в один клик.</p>
+                        </div>
+                    </div>
+                    <button onclick="downloadFullProjectZip()" class="w-full py-3 rounded-xl bg-gradient-to-r from-accentCyan to-accentPurple text-white font-semibold text-sm shadow-neonCyan hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> Скачать готовый ZIP архив сайта (Express Backend + Database)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 8: PRICING PLANS ================= -->
+        <section id="view-pricing" class="tab-view hidden space-y-8 py-4">
+            <div class="text-center max-w-2xl mx-auto space-y-2">
+                <h2 class="text-3xl font-bold">Выберите подходящий тариф</h2>
+                <p class="text-textSec text-sm">Раскройте полную мощность искусственного интеллекта без ограничений.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <!-- Free Plan -->
+                <div class="glass-card p-6 rounded-2xl border border-borderGlass space-y-6 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-lg">Free</h3>
+                        <div class="text-3xl font-extrabold">$0 <span class="text-xs text-textSec font-normal">/ навсегда</span></div>
+                        <p class="text-xs text-textSec">Базовый доступ к возможностям AI WORLD.</p>
+                        <ul class="space-y-2 text-xs text-textMain">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> До 20 сообщений в день</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Основные AI-инструменты</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Сохранение до 5 проектов</li>
+                        </ul>
+                    </div>
+                    <button class="w-full py-2.5 rounded-xl border border-borderGlass text-textSec text-sm font-semibold cursor-default">Текущий тариф</button>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="glass-card p-6 rounded-2xl border border-accentPurple shadow-neonPurple space-y-6 flex flex-col justify-between relative bg-accentPurple/10">
+                    <div class="absolute -top-3 right-6 bg-accentPurple text-white text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full">Популярный</div>
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-lg text-accentCyan">Pro Plan</h3>
+                        <div class="text-3xl font-extrabold">$19 <span class="text-xs text-textSec font-normal">/ месяц</span></div>
+                        <p class="text-xs text-textSec">Для профессионального использования каждый день.</p>
+                        <ul class="space-y-2 text-xs text-textMain">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Безлимитный AI Chat</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Приоритетная скорость ответов</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Неограниченные проекты</li>
+                        </ul>
+                    </div>
+                    <button onclick="upgradeUserPlan('Pro Plan')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-accentPurple to-accentCyan text-white text-sm font-semibold hover:opacity-90 shadow-neonPurple">Активировать Pro</button>
+                </div>
+
+                <!-- Ultimate Plan -->
+                <div class="glass-card p-6 rounded-2xl border border-borderGlass space-y-6 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-lg text-amber-300">Ultimate</h3>
+                        <div class="text-3xl font-extrabold">$49 <span class="text-xs text-textSec font-normal">/ месяц</span></div>
+                        <p class="text-xs text-textSec">Для команд и коммерческих разработок.</p>
+                        <ul class="space-y-2 text-xs text-textMain">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Все функции Pro тарифа</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Доступ к эксклюзивным моделям</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Поддержка 24/7</li>
+                        </ul>
+                    </div>
+                    <button onclick="upgradeUserPlan('Ultimate')" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold">Выбрать Ultimate</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- ================= MODALS & OVERLAYS ================= -->
+
+    <!-- Auth Modal (Login / Register) -->
+    <div id="modal-auth" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+        <div class="glass-card w-full max-w-md p-6 rounded-2xl border border-borderGlass relative space-y-6">
+            <button onclick="closeAuthModal()" class="absolute right-4 top-4 text-textSec hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="text-center space-y-1">
+                <h3 id="auth-modal-title" class="text-xl font-bold">Вход в AI WORLD</h3>
+                <p id="auth-modal-subtitle" class="text-xs text-textSec">Введите данные для авторизации</p>
+            </div>
+            
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div id="field-username" class="hidden">
+                    <label class="block text-xs text-textSec mb-1">Имя пользователя</label>
+                    <input type="text" id="auth-input-name" class="w-full bg-bgMain border border-borderGlass rounded-xl px-4 py-2.5 text-sm text-textMain focus:outline-none focus:border-accentCyan">
+                </div>
+                <div>
+                    <label class="block text-xs text-textSec mb-1">Email</label>
+                    <input type="email" id="auth-input-email" required class="w-full bg-bgMain border border-borderGlass rounded-xl px-4 py-2.5 text-sm text-textMain focus:outline-none focus:border-accentCyan">
+                </div>
+                <div>
+                    <label class="block text-xs text-textSec mb-1">Пароль</label>
+                    <input type="password" id="auth-input-pass" required class="w-full bg-bgMain border border-borderGlass rounded-xl px-4 py-2.5 text-sm text-textMain focus:outline-none focus:border-accentCyan">
+                </div>
+                <button type="submit" id="auth-submit-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-accentPurple to-accentCyan text-white font-semibold text-sm shadow-neonPurple">
+                    Войти
+                </button>
+            </form>
+
+            <div class="text-center text-xs text-textSec">
+                <span id="auth-toggle-text">Еще нет аккаунта?</span>
+                <button onclick="toggleAuthMode()" id="auth-toggle-btn" class="text-accentCyan font-semibold ml-1 hover:underline">Зарегистрироваться</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- API Key Config Modal -->
+    <div id="modal-apikey" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+        <div class="glass-card w-full max-w-md p-6 rounded-2xl border border-borderGlass relative space-y-4">
+            <button onclick="closeApiKeyModal()" class="absolute right-4 top-4 text-textSec hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-lg font-bold flex items-center gap-2">
+                <i class="fa-solid fa-key text-accentCyan"></i> Настройка Google Gemini API Key
+            </h3>
+            <p class="text-xs text-textSec leading-relaxed">
+                Введите ваш собственный API-ключ Google Gemini для неограниченной и прямых запросов к генеративной модели.
+            </p>
+            <div>
+                <label class="block text-xs text-textSec mb-1">API Key</label>
+                <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full bg-bgMain border border-borderGlass rounded-xl px-4 py-2 text-sm font-mono text-textMain focus:outline-none focus:border-accentCyan">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="saveApiKey()" class="px-4 py-2 rounded-xl bg-accentPurple text-white text-xs font-semibold">Сохранить Ключ</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Create Project Modal -->
+    <div id="modal-create-project" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+        <div class="glass-card w-full max-w-md p-6 rounded-2xl border border-borderGlass relative space-y-4">
+            <button onclick="closeCreateProjectModal()" class="absolute right-4 top-4 text-textSec hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-lg font-bold">Новый Проект</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs text-textSec mb-1">Название проекта</label>
+                    <input type="text" id="project-title-input" placeholder="Например: Скрипт Парсера" class="w-full bg-bgMain border border-borderGlass rounded-xl px-4 py-2 text-sm text-textMain focus:outline-none focus:border-accentCyan">
+                </div>
+                <div>
+                    <label class="block text-xs text-textSec mb-1">Содержимое / Код / Текст</label>
+                    <textarea id="project-content-input" rows="4" placeholder="Введите текст или код проекта..." class="w-full bg-bgMain border border-borderGlass rounded-xl p-3 text-sm text-textMain focus:outline-none focus:border-accentCyan resize-none"></textarea>
+                </div>
+            </div>
+            <button onclick="saveNewProject()" class="w-full py-2.5 rounded-xl bg-accentPurple text-white font-semibold text-sm">Создать</button>
+        </div>
+    </div>
+
+
+    <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
+    <script>
+        /* ----------------------------------------------------
+           LOCAL STORAGE & STATE MANAGEMENT
+        ---------------------------------------------------- */
+        const STATE = {
+            currentUser: JSON.parse(localStorage.getItem('aiw_user')) || null,
+            apiKey: localStorage.getItem('aiw_gemini_key') || '',
+            chats: JSON.parse(localStorage.getItem('aiw_chats')) || [],
+            currentChatId: null,
+            projects: JSON.parse(localStorage.getItem('aiw_projects')) || [
+                { id: 'p1', title: 'Маркетинговая Стратегия AI', content: 'План развития стартапа в сфере ИИ на 2026 год.', date: '2026-10-22' }
+            ],
+            historyLogs: JSON.parse(localStorage.getItem('aiw_history')) || [],
+            authMode: 'login' // 'login' or 'register'
+        };
+
+        // On Load Init
+        window.addEventListener('DOMContentLoaded', () => {
+            updateUserUI();
+            initDefaultChatIfEmpty();
+            renderChatSessionsList();
+            renderProjectsList();
+            renderHistoryLogs();
+            updateDashboardStats();
+            
+            // Default view landing
+            switchTab('landing');
+        });
+
+        /* ----------------------------------------------------
+           NAVIGATION & TABS SWITCHING
+        ---------------------------------------------------- */
+        function switchTab(tabId) {
+            // Hide all tab views
+            document.querySelectorAll('.tab-view').forEach(view => view.classList.add('hidden'));
+            
+            // Show selected view
+            const target = document.getElementById(`view-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            // Update nav active styles
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.tab === tabId) {
+                    btn.classList.add('text-accentCyan', 'bg-white/5');
+                    btn.classList.remove('text-textSec');
+                } else {
+                    btn.classList.remove('text-accentCyan', 'bg-white/5');
+                    btn.classList.add('text-textSec');
+                }
+            });
+
+            // Close mobile menu if open
+            document.getElementById('mobile-menu').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        /* ----------------------------------------------------
+           AUTHENTICATION SIMULATION & USER SESSION
+        ---------------------------------------------------- */
+        function openAuthModal(mode = 'login') {
+            STATE.authMode = mode;
+            const modal = document.getElementById('modal-auth');
+            modal.classList.remove('hidden');
+            updateAuthModalUI();
+        }
+
+        function closeAuthModal() {
+            document.getElementById('modal-auth').classList.add('hidden');
+        }
+
+        function toggleAuthMode() {
+            STATE.authMode = STATE.authMode === 'login' ? 'register' : 'login';
+            updateAuthModalUI();
+        }
+
+        function updateAuthModalUI() {
+            const isReg = STATE.authMode === 'register';
+            document.getElementById('auth-modal-title').textContent = isReg ? 'Регистрация в AI WORLD' : 'Вход в AI WORLD';
+            document.getElementById('auth-modal-subtitle').textContent = isReg ? 'Создайте новый аккаунт бесплатно' : 'Введите данные для авторизации';
+            document.getElementById('field-username').classList.toggle('hidden', !isReg);
+            document.getElementById('auth-submit-btn').textContent = isReg ? 'Зарегистрироваться' : 'Войти';
+            document.getElementById('auth-toggle-text').textContent = isReg ? 'Уже есть аккаунт?' : 'Еще нет аккаунта?';
+            document.getElementById('auth-toggle-btn').textContent = isReg ? 'Войти' : 'Зарегистрироваться';
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-input-email').value;
+            const name = document.getElementById('auth-input-name').value || email.split('@')[0];
+
+            STATE.currentUser = {
+                name: name,
+                email: email,
+                plan: 'Free Tier',
+                avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`
+            };
+
+            localStorage.setItem('aiw_user', JSON.stringify(STATE.currentUser));
+            updateUserUI();
+            closeAuthModal();
+            showToast(`Добро пожаловать, ${name}!`, 'success');
+        }
+
+        function logoutUser() {
+            STATE.currentUser = null;
+            localStorage.removeItem('aiw_user');
+            updateUserUI();
+            switchTab('landing');
+            showToast('Вы успешно вышли из аккаунта');
+        }
+
+        function updateUserUI() {
+            const guestBox = document.getElementById('auth-buttons-guest');
+            const userBox = document.getElementById('auth-buttons-user');
+
+            if (STATE.currentUser) {
+                guestBox.classList.add('hidden');
+                userBox.classList.remove('hidden');
+                document.getElementById('user-header-name').textContent = STATE.currentUser.name;
+                document.getElementById('user-header-avatar').src = STATE.currentUser.avatar;
+                
+                // Update profile page
+                document.getElementById('dash-user-name').textContent = STATE.currentUser.name;
+                document.getElementById('profile-display-name').textContent = STATE.currentUser.name;
+                document.getElementById('profile-display-email').textContent = STATE.currentUser.email;
+                document.getElementById('profile-display-plan').textContent = STATE.currentUser.plan;
+                document.getElementById('profile-avatar-img').src = STATE.currentUser.avatar;
+                document.getElementById('settings-name-input').value = STATE.currentUser.name;
+            } else {
+                guestBox.classList.remove('hidden');
+                userBox.classList.add('hidden');
+                document.getElementById('dash-user-name').textContent = 'Гость';
+            }
+        }
+
+        function saveUserSettings() {
+            if (!STATE.currentUser) {
+                openAuthModal('login');
+                return;
+            }
+            const newName = document.getElementById('settings-name-input').value;
+            if (newName) {
+                STATE.currentUser.name = newName;
+                STATE.currentUser.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${newName}`;
+                localStorage.setItem('aiw_user', JSON.stringify(STATE.currentUser));
+                updateUserUI();
+                showToast('Настройки профиля обновлены!', 'success');
+            }
+        }
+
+        function upgradeUserPlan(planName) {
+            if (!STATE.currentUser) {
+                openAuthModal('login');
+                return;
+            }
+            STATE.currentUser.plan = planName;
+            localStorage.setItem('aiw_user', JSON.stringify(STATE.currentUser));
+            updateUserUI();
+            updateDashboardStats();
+            showToast(`Тариф успешно обновлен на ${planName}!`, 'success');
+        }
+
+        /* ----------------------------------------------------
+           API KEY MODAL
+        ---------------------------------------------------- */
+        function openApiKeyModal() {
+            document.getElementById('api-key-input').value = STATE.apiKey;
+            document.getElementById('modal-apikey').classList.remove('hidden');
+        }
+        function closeApiKeyModal() {
+            document.getElementById('modal-apikey').classList.add('hidden');
+        }
+        function saveApiKey() {
+            STATE.apiKey = document.getElementById('api-key-input').value.trim();
+            localStorage.setItem('aiw_gemini_key', STATE.apiKey);
+            closeApiKeyModal();
+            showToast('Gemini API ключ сохранен!', 'success');
+        }
+
+        /* ----------------------------------------------------
+           AI CHAT STUDIO CORE & GEMINI API INTEGRATION
+        ---------------------------------------------------- */
+        function initDefaultChatIfEmpty() {
+            if (STATE.chats.length === 0) {
+                const defaultChat = {
+                    id: 'chat_' + Date.now(),
+                    title: 'Новый разговор',
+                    messages: [
+                        { role: 'model', text: 'Привет! Я ассистент **AI WORLD**. Чем могу помочь сегодня?' }
+                    ]
+                };
+                STATE.chats.push(defaultChat);
+                STATE.currentChatId = defaultChat.id;
+                saveChatsToStorage();
+            } else {
+                STATE.currentChatId = STATE.chats[0].id;
+            }
+            renderCurrentChatMessages();
+        }
+
+        function saveChatsToStorage() {
+            localStorage.setItem('aiw_chats', JSON.stringify(STATE.chats));
+            updateDashboardStats();
+        }
+
+        function startNewChatSession() {
+            const newChat = {
+                id: 'chat_' + Date.now(),
+                title: 'Новый разговор',
+                messages: [
+                    { role: 'model', text: 'Задайте любой вопрос или выберите идею ниже!' }
+                ]
+            };
+            STATE.chats.unshift(newChat);
+            STATE.currentChatId = newChat.id;
+            saveChatsToStorage();
+            renderChatSessionsList();
+            renderCurrentChatMessages();
+        }
+
+        function renderChatSessionsList() {
+            const container = document.getElementById('chat-session-list');
+            container.innerHTML = '';
+
+            STATE.chats.forEach(chat => {
+                const isActive = chat.id === STATE.currentChatId;
+                const div = document.createElement('div');
+                div.className = `p-2.5 rounded-xl text-xs flex items-center justify-between cursor-pointer border transition-all ${
+                    isActive ? 'bg-accentPurple/20 border-accentPurple text-white font-medium' : 'border-transparent text-textSec hover:bg-white/5'
+                }`;
+                div.onclick = () => {
+                    STATE.currentChatId = chat.id;
+                    renderChatSessionsList();
+                    renderCurrentChatMessages();
+                };
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 truncate">
+                        <i class="fa-solid fa-message text-[10px] ${isActive ? 'text-accentCyan' : 'opacity-60'}"></i>
+                        <span class="truncate">${chat.title}</span>
+                    </div>
+                    <button onclick="deleteChatSession(event, '${chat.id}')" class="opacity-0 hover:opacity-100 p-1 text-red-400">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function deleteChatSession(e, chatId) {
+            e.stopPropagation();
+            STATE.chats = STATE.chats.filter(c => c.id !== chatId);
+            if (STATE.chats.length === 0) {
+                initDefaultChatIfEmpty();
+            } else {
+                STATE.currentChatId = STATE.chats[0].id;
+            }
+            saveChatsToStorage();
+            renderChatSessionsList();
+            renderCurrentChatMessages();
+        }
+
+        function renderCurrentChatMessages() {
+            const currentChat = STATE.chats.find(c => c.id === STATE.currentChatId);
+            if (!currentChat) return;
+
+            document.getElementById('current-chat-title').textContent = currentChat.title;
+            const container = document.getElementById('chat-messages-box');
+            container.innerHTML = '';
+
+            currentChat.messages.forEach(msg => {
+                appendMessageToUI(msg.role, msg.text);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendMessageToUI(role, text) {
+            const container = document.getElementById('chat-messages-box');
+            const isUser = role === 'user';
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex gap-3 max-w-3xl ${isUser ? 'ml-auto flex-row-reverse' : ''}`;
+
+            const iconHtml = isUser ?
+                `<div class="w-8 h-8 rounded-lg bg-accentCyan/20 text-accentCyan flex items-center justify-center shrink-0"><i class="fa-solid fa-user"></i></div>` :
+                `<div class="w-8 h-8 rounded-lg bg-accentPurple/20 text-accentPurple flex items-center justify-center shrink-0"><i class="fa-solid fa-brain"></i></div>`;
+
+            // Formatting simple markdown & code blocks
+            let formattedText = escapeHtml(text)
+                .replace(/\n/g, '<br>')
+                .replace(/```([\s\S]*?)```/g, '<pre class="bg-black/60 p-3 rounded-lg font-mono text-xs text-accentCyan border border-white/10 my-2 overflow-x-auto"><code>$1</code></pre>');
+
+            msgDiv.innerHTML = `
+                ${iconHtml}
+                <div class="glass-card p-4 rounded-2xl border ${isUser ? 'border-accentCyan/30 bg-accentCyan/5' : 'border-borderGlass'} text-sm text-textMain leading-relaxed space-y-2">
+                    <div>${formattedText}</div>
+                </div>
+            `;
+
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function handleChatKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        function useChatPreset(text) {
+            document.getElementById('chat-input').value = text;
+            sendChatMessage();
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const currentChat = STATE.chats.find(c => c.id === STATE.currentChatId);
+            if (!currentChat) return;
+
+            // Update title if first message
+            if (currentChat.messages.length <= 1) {
+                currentChat.title = text.substring(0, 24) + '...';
+                renderChatSessionsList();
+            }
+
+            // User Message
+            currentChat.messages.push({ role: 'user', text: text });
+            appendMessageToUI('user', text);
+            input.value = '';
+
+            // Add typing indicator
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'ai-typing-indicator';
+            typingDiv.className = 'flex gap-3 max-w-3xl';
+            typingDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-accentPurple/20 text-accentPurple flex items-center justify-center shrink-0"><i class="fa-solid fa-brain"></i></div>
+                <div class="glass-card p-4 rounded-2xl border border-borderGlass flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-accentCyan typing-dot"></span>
+                    <span class="w-2 h-2 rounded-full bg-accentPurple typing-dot"></span>
+                    <span class="w-2 h-2 rounded-full bg-pink-400 typing-dot"></span>
+                </div>
+            `;
+            document.getElementById('chat-messages-box').appendChild(typingDiv);
+
+            // Log history activity
+            logActivity('AI Chat Request', text);
+
+            // Call Backend / Gemini API
+            const aiResponseText = await queryGeminiAPI(text);
+
+            // Remove typing indicator
+            const indicator = document.getElementById('ai-typing-indicator');
+            if (indicator) indicator.remove();
+
+            currentChat.messages.push({ role: 'model', text: aiResponseText });
+            appendMessageToUI('model', aiResponseText);
+            saveChatsToStorage();
+        }
+
+        /* Gemini API Fetch Call with Backoff & Fallback */
+        async function queryGeminiAPI(prompt, systemInstruction = "Ты - продвинутый ассистент AI WORLD. Отвечай вежливо, точно, с хорошим форматированием.") {
+            const apiKey = STATE.apiKey; // Uses user key or falls back
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error('API request failed');
+
+                const data = await response.json();
+                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                return reply || "Извините, не удалось получить откликов от модели.";
+            } catch (err) {
+                // Smart Simulated Intelligent Response Fallback if API key absent
+                return `[Демо-Режим AI WORLD]\nСгенерированный ответ на запрос: "${prompt}"\n\nДля подключения реальной модели Gemini укажите ваш API-ключ в настройках шапки!`;
+            }
+        }
+
+        function clearCurrentChatMessages() {
+            const currentChat = STATE.chats.find(c => c.id === STATE.currentChatId);
+            if (currentChat) {
+                currentChat.messages = [{ role: 'model', text: 'Чат очищен. Готов к новым вопросам!' }];
+                saveChatsToStorage();
+                renderCurrentChatMessages();
+            }
+        }
+
+        /* ----------------------------------------------------
+           AI TOOLS HUB LOGIC
+        ---------------------------------------------------- */
+        function filterTools(category) {
+            document.querySelectorAll('.tool-filter-btn').forEach(btn => {
+                if (btn.dataset.cat === category) {
+                    btn.classList.add('border-accentPurple', 'text-white');
+                    btn.classList.remove('border-borderGlass', 'text-textSec');
+                } else {
+                    btn.classList.remove('border-accentPurple', 'text-white');
+                    btn.classList.add('border-borderGlass', 'text-textSec');
+                }
+            });
+        }
+
+        function switchSubTool(toolId) {
+            document.querySelectorAll('.subtool-pane').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.subtool-tab').forEach(t => {
+                t.classList.remove('text-accentCyan', 'border-b-2', 'border-accentCyan');
+                t.classList.add('text-textSec');
+            });
+
+            document.getElementById(`subtool-view-${toolId}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`subtool-tab-${toolId}`);
+            activeTab.classList.add('text-accentCyan', 'border-b-2', 'border-accentCyan');
+            activeTab.classList.remove('text-textSec');
+        }
+
+        function openToolDirect(toolType) {
+            switchTab('tools');
+            if (toolType === 'text') switchSubTool('text-gen');
+            if (toolType === 'code') switchSubTool('code-assist');
+            if (toolType === 'study') switchSubTool('study-assist');
+        }
+
+        async function generateTextTool() {
+            const type = document.getElementById('tg-type').value;
+            const topic = document.getElementById('tg-topic').value;
+            const style = document.getElementById('tg-style').value;
+            const lang = document.getElementById('tg-lang').value;
+
+            if (!topic) {
+                showToast('Пожалуйста, введите тему для текста!', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('tg-submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Генерация...`;
+
+            const prompt = `Напиши ${type} на тему: "${topic}". Стиль: ${style}. Язык: ${lang}.`;
+            const result = await queryGeminiAPI(prompt, "Ты профессиональный копирайтер.");
+
+            document.getElementById('tg-output').textContent = result;
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Сгенерировать Текст`;
+            logActivity('Text Generator', topic);
+        }
+
+        async function generateCodeTool() {
+            const task = document.getElementById('ca-task').value;
+            const lang = document.getElementById('ca-lang').value;
+            const mode = document.getElementById('ca-mode').value;
+
+            if (!task) {
+                showToast('Введите описание задачи!', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('ca-submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Обработка...`;
+
+            const prompt = `Выполни задачу: ${mode}. Язык: ${lang}. Задача: ${task}`;
+            const result = await queryGeminiAPI(prompt, "Ты senior разработчик программного обеспечения.");
+
+            document.getElementById('ca-output').textContent = result;
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-code"></i> Запустить Code AI`;
+            logActivity('Code Assistant', task);
+        }
+
+        async function generateStudyTool() {
+            const topic = document.getElementById('sa-topic').value;
+            const format = document.getElementById('sa-format').value;
+
+            if (!topic) {
+                showToast('Введите тему для изучения!', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('sa-submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Подготовка...`;
+
+            const prompt = `Создай учебный материал в формате "${format}" по теме "${topic}".`;
+            const result = await queryGeminiAPI(prompt, "Ты терпеливый и опытный преподаватель.");
+
+            document.getElementById('sa-output').textContent = result;
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-graduation-cap"></i> Создать Обучающий Материал`;
+            logActivity('Study Assistant', topic);
+        }
+
+        function copyToolResult(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text);
+            showToast('Скопировано в буфер обмена!', 'success');
+        }
+
+        function saveToolResultToProject(defaultTitle, elementId) {
+            const content = document.getElementById(elementId).textContent;
+            if (!content || content.includes('Заполните форму')) {
+                showToast('Нет содержимого для сохранения!', 'error');
+                return;
+            }
+            const newProj = {
+                id: 'p_' + Date.now(),
+                title: defaultTitle,
+                content: content,
+                date: new Date().toISOString().split('T')[0]
+            };
+            STATE.projects.unshift(newProj);
+            localStorage.setItem('aiw_projects', JSON.stringify(STATE.projects));
+            renderProjectsList();
+            updateDashboardStats();
+            showToast('Сохранено в разделе «Проекты»!', 'success');
+        }
+
+        /* ----------------------------------------------------
+           PROJECTS MANAGER CRUD
+        ---------------------------------------------------- */
+        function renderProjectsList() {
+            const container = document.getElementById('projects-grid');
+            const search = document.getElementById('projects-search')?.value.toLowerCase() || '';
+            container.innerHTML = '';
+
+            const filtered = STATE.projects.filter(p => p.title.toLowerCase().includes(search) || p.content.toLowerCase().includes(search));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center text-textSec text-sm py-8">Проекты не найдены</div>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'glass-card p-5 rounded-2xl border border-borderGlass space-y-3 flex flex-col justify-between';
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-bold text-sm text-textMain">${escapeHtml(p.title)}</h4>
+                            <span class="text-[10px] text-textSec">${p.date}</span>
+                        </div>
+                        <p class="text-xs text-textSec line-clamp-4 leading-relaxed font-mono bg-bgMain/50 p-2 rounded">${escapeHtml(p.content)}</p>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2 border-t border-borderGlass">
+                        <button onclick="copyText('${escapeHtml(p.content)}')" class="p-1.5 text-textSec hover:text-accentCyan"><i class="fa-solid fa-copy text-xs"></i></button>
+                        <button onclick="deleteProject('${p.id}')" class="p-1.5 text-textSec hover:text-red-400"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Update Dashboard Recent Projects
+            const dashBox = document.getElementById('dash-recent-projects');
+            if (dashBox) {
+                dashBox.innerHTML = '';
+                STATE.projects.slice(0, 3).forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'p-3 rounded-xl bg-bgSec/70 border border-borderGlass flex justify-between items-center text-xs';
+                    item.innerHTML = `
+                        <div class="truncate pr-2">
+                            <p class="font-semibold text-textMain truncate">${escapeHtml(p.title)}</p>
+                            <p class="text-[10px] text-textSec">${p.date}</p>
+                        </div>
+                        <i class="fa-solid fa-folder text-accentPurple"></i>
+                    `;
+                    dashBox.appendChild(item);
+                });
+            }
+        }
+
+        function openCreateProjectModal() {
+            document.getElementById('modal-create-project').classList.remove('hidden');
+        }
+        function closeCreateProjectModal() {
+            document.getElementById('modal-create-project').classList.add('hidden');
+        }
+
+        function saveNewProject() {
+            const title = document.getElementById('project-title-input').value.trim() || 'Без названия';
+            const content = document.getElementById('project-content-input').value.trim();
+
+            if (!content) {
+                showToast('Заполните содержимое проекта!', 'error');
+                return;
+            }
+
+            STATE.projects.unshift({
+                id: 'p_' + Date.now(),
+                title: title,
+                content: content,
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            localStorage.setItem('aiw_projects', JSON.stringify(STATE.projects));
+            renderProjectsList();
+            updateDashboardStats();
+            closeCreateProjectModal();
+            showToast('Новый проект успешно создан!', 'success');
+        }
+
+        function deleteProject(id) {
+            STATE.projects = STATE.projects.filter(p => p.id !== id);
+            localStorage.setItem('aiw_projects', JSON.stringify(STATE.projects));
+            renderProjectsList();
+            updateDashboardStats();
+            showToast('Проект удален');
+        }
+
+        /* ----------------------------------------------------
+           HISTORY & LOGS
+        ---------------------------------------------------- */
+        function logActivity(action, details) {
+            const log = {
+                id: 'l_' + Date.now(),
+                action: action,
+                details: details.substring(0, 50) + '...',
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            STATE.historyLogs.unshift(log);
+            localStorage.setItem('aiw_history', JSON.stringify(STATE.historyLogs));
+            renderHistoryLogs();
+            updateDashboardStats();
+        }
+
+        function renderHistoryLogs() {
+            const container = document.getElementById('history-logs-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (STATE.historyLogs.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-textSec text-xs">История пока пуста</div>`;
+                return;
+            }
+
+            STATE.historyLogs.forEach(l => {
+                const item = document.createElement('div');
+                item.className = 'p-4 flex items-center justify-between text-xs hover:bg-white/5 transition-all';
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full bg-accentCyan"></span>
+                        <div>
+                            <p class="font-semibold text-textMain">${escapeHtml(l.action)}</p>
+                            <p class="text-textSec text-[11px]">${escapeHtml(l.details)}</p>
+                        </div>
+                    </div>
+                    <span class="text-textSec font-mono">${l.timestamp}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function clearAllHistoryLogs() {
+            STATE.historyLogs = [];
+            localStorage.removeItem('aiw_history');
+            renderHistoryLogs();
+            updateDashboardStats();
+            showToast('История очищена');
+        }
+
+        /* ----------------------------------------------------
+           STATS CALCULATION
+        ---------------------------------------------------- */
+        function updateDashboardStats() {
+            document.getElementById('stat-projects-count').textContent = STATE.projects.length;
+            
+            let totalMsg = 0;
+            STATE.chats.forEach(c => totalMsg += c.messages.length);
+            document.getElementById('stat-messages-count').textContent = totalMsg;
+            document.getElementById('stat-generations-count').textContent = STATE.historyLogs.length;
+
+            if (STATE.currentUser) {
+                document.getElementById('stat-plan-name').textContent = STATE.currentUser.plan;
+            }
+        }
+
+        /* ----------------------------------------------------
+           FULL BACKEND ZIP EXPORTER GENERATOR
+        ---------------------------------------------------- */
+        function downloadFullProjectZip() {
+            if (typeof JSZip === 'undefined') {
+                showToast('Библиотека JSZip загружается...', 'info');
+                return;
+            }
+
+            const zip = new JSZip();
+
+            // 1. package.json
+            zip.file("package.json", JSON.stringify({
+                "name": "ai-world-platform",
+                "version": "3.0.0",
+                "description": "AI WORLD Full-Stack Express & SQLite Platform",
+                "main": "server.js",
+                "scripts": {
+                    "start": "node server.js",
+                    "dev": "nodemon server.js"
+                },
+                "dependencies": {
+                    "express": "^4.18.2",
+                    "sqlite3": "^5.1.6",
+                    "bcryptjs": "^2.4.3",
+                    "dotenv": "^16.3.1",
+                    "cors": "^2.8.5"
+                }
+            }, null, 2));
+
+            // 2. .env.example
+            zip.file(".env.example", `PORT=3000\nNODE_ENV=development\nGEMINI_API_KEY=your_key_here\nSESSION_SECRET=super_secret_aiworld_key`);
+
+            // 3. server.js
+            zip.file("server.js", `
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Mock AI Chat Endpoint
+app.post('/api/ai/chat', async (req, res) => {
+    const { prompt } = req.body;
+    res.json({ success: true, reply: \`[AI WORLD Server Reply] Received: \${prompt}\` });
+});
+
+app.listen(PORT, () => {
+    console.log(\`AI WORLD Server running on http://localhost:\${PORT}\`);
+});
+            `);
+
+            // 4. SQLite DB setup
+            const backendFolder = zip.folder("backend");
+            backendFolder.file("database.js", `
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('./data/aiworld.db', (err) => {
+    if (err) console.error(err.message);
+    console.log('Connected to SQLite database.');
+});
+
+db.serialize(() => {
+    db.run(\`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, password TEXT)\`);
+});
+
+module.exports = db;
+            `);
+
+            // README.md
+            zip.file("README.md", `# AI WORLD Platform\n\n## Запуск проекта\n1. Установите Node.js\n2. Выполните \`npm install\`\n3. Скопируйте \`.env.example\` в \`.env\`\n4. Запустите \`npm start\`\n5. Откройте http://localhost:3000 в браузере!`);
+
+            // Download trigger
+            zip.generateAsync({ type: "blob" }).then(function (content) {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(content);
+                a.download = "ai-world-full-stack-project.zip";
+                a.click();
+                showToast('Архив проекта скачан!', 'success');
+            });
+        }
+
+        /* ----------------------------------------------------
+           HELPERS & TOASTS
+        ---------------------------------------------------- */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-3 rounded-xl glass-card border border-borderGlass text-xs text-textMain flex items-center gap-2 shadow-lg transition-all animate-bounce pointer-events-auto`;
+            
+            const icon = type === 'success' ? 'fa-check-circle text-emerald-400' :
+                         type === 'error' ? 'fa-exclamation-circle text-red-400' : 'fa-info-circle text-accentCyan';
+            
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+            showToast('Скопировано!', 'success');
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
